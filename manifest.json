@@ -2,7 +2,7 @@
   "name": "喵恋日记",
   "short_name": "喵恋",
   "description": "恋爱纪念APP，记录我们的美好时光",
-  "start_url": "index-single.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#fff9f5",
   "theme_color": "#ff9d9d",
