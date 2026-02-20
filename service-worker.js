@@ -2,7 +2,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open('meow-love-diary').then((cache) => {
       return cache.addAll([
-        'index-single.html',
+        'index.html',
         'manifest.json'
       ]);
     })
