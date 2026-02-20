@@ -1,0 +1,21 @@
+{
+  "name": "喵恋日记",
+  "short_name": "喵恋",
+  "description": "恋爱纪念APP，记录我们的美好时光",
+  "start_url": "index-single.html",
+  "display": "standalone",
+  "background_color": "#fff9f5",
+  "theme_color": "#ff9d9d",
+  "icons": [
+    {
+      "src": "https://api.dicebear.com/7.x/shapes/svg?seed=meowlove",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "https://api.dicebear.com/7.x/shapes/svg?seed=meowlove",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
