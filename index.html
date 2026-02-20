@@ -235,89 +235,65 @@
       '👑🐱' // 终身小猫
     ];
 
-    // 模拟数据
-    const initialDatings = [
-      {
-        id: 1,
-        title: '周末见面',
-        type: 'offline',
-        time: '2024-02-25 14:00',
-        location: '市中心咖啡厅',
-        plan: '一起喝咖啡，然后看电影',
-        status: 'accepted',
-        creator: 'me'
-      },
-      {
-        id: 2,
-        title: '线上视频',
-        type: 'online',
-        time: '2024-02-22 20:00',
-        location: '腾讯会议',
-        plan: '聊聊天，分享一周的生活',
-        status: 'pending',
-        creator: 'partner'
-      }
-    ];
+    // 模拟数据 - 初始为空
+    const initialDatings = [];
 
-    const initialTasks = [
-      {
-        id: 1,
-        title: '早睡早起',
-        description: '今天要早点睡觉，保证充足的睡眠',
-        duration: 30,
-        intimacyReward: 15,
-        deadline: '2024-02-21 23:59',
-        category: 'daily',
-        status: 'pending',
-        creator: 'partner'
-      },
-      {
-        id: 2,
-        title: '拍一张自拍',
-        description: '拍一张今天的自拍发给我',
-        duration: 10,
-        intimacyReward: 20,
-        deadline: '2024-02-20 22:00',
-        category: 'surprise',
-        status: 'claimed',
-        creator: 'me',
-        claimer: 'partner'
-      }
-    ];
+    const initialTasks = [];
 
-    const initialMemories = [
-      {
-        id: 1,
-        type: 'checkIn',
-        title: '早安打卡',
-        content: '今天是晴天，心情很好！',
-        date: '2024-02-20 08:30',
-        intimacy: 10
-      },
-      {
-        id: 2,
-        type: 'dating',
-        title: '云看电影',
-        content: '一起看了《你的名字》，很浪漫',
-        date: '2024-02-19 19:30',
-        intimacy: 20
+    const initialMemories = [];
+
+    // 初始化应用数据，确保首次使用时所有数据都是空的
+    function initializeApp() {
+      // 检查是否是首次使用
+      const isFirstTime = !localStorage.getItem('appInitialized');
+      if (isFirstTime) {
+        // 清空所有localStorage数据
+        localStorage.clear();
+        // 标记应用已初始化
+        localStorage.setItem('appInitialized', 'true');
       }
-    ];
+    }
+
+    // 在应用启动时初始化
+    initializeApp();
 
     // 首页组件
     function HomePage() {
       const [quote, setQuote] = React.useState('');
-      const [intimacyLevel, setIntimacyLevel] = React.useState(2);
-      const [intimacyPoints, setIntimacyPoints] = React.useState(68);
-      const [totalPoints, setTotalPoints] = React.useState(100);
-      const [checkInStreak, setCheckInStreak] = React.useState(7);
-      const [hasCheckedIn, setHasCheckedIn] = React.useState(false);
-      const [mood, setMood] = React.useState('happy');
+      // 从本地存储加载数据，初始值为默认状态
+      const [intimacyLevel, setIntimacyLevel] = React.useState(() => {
+        return parseInt(localStorage.getItem('intimacyLevel')) || 0;
+      });
+      const [intimacyPoints, setIntimacyPoints] = React.useState(() => {
+        return parseInt(localStorage.getItem('intimacyPoints')) || 0;
+      });
+      const [totalPoints, setTotalPoints] = React.useState(() => {
+        return parseInt(localStorage.getItem('totalPoints')) || 50;
+      });
+      const [checkInStreak, setCheckInStreak] = React.useState(() => {
+        return parseInt(localStorage.getItem('checkInStreak')) || 0;
+      });
+      const [hasCheckedIn, setHasCheckedIn] = React.useState(() => {
+        return localStorage.getItem('hasCheckedIn') === 'true';
+      });
+      const [mood, setMood] = React.useState(() => {
+        return localStorage.getItem('mood') || 'happy';
+      });
 
       // 初始化随机标语
       React.useEffect(() => {
         generateRandomQuote();
       }, []);
+
+      // 保存数据到本地存储
+      React.useEffect(() => {
+        localStorage.setItem('intimacyLevel', intimacyLevel);
+        localStorage.setItem('intimacyPoints', intimacyPoints);
+        localStorage.setItem('totalPoints', totalPoints);
+        localStorage.setItem('checkInStreak', checkInStreak);
+        localStorage.setItem('hasCheckedIn', hasCheckedIn);
+        localStorage.setItem('mood', mood);
+      }, [intimacyLevel, intimacyPoints, totalPoints, checkInStreak, hasCheckedIn, mood]);
 
       // 生成随机浪漫标语
       const generateRandomQuote = () => {
@@ -477,7 +453,11 @@
 
     // 约会页面组件
     function DatingPage() {
-      const [datings, setDatings] = React.useState(initialDatings);
+      // 从本地存储加载数据，初始值为空数组
+      const [datings, setDatings] = React.useState(() => {
+        const savedDatings = localStorage.getItem('datings');
+        return savedDatings ? JSON.parse(savedDatings) : [];
+      });
       const [showCreateModal, setShowCreateModal] = React.useState(false);
       const [newDating, setNewDating] = React.useState({
         title: '',
@@ -486,6 +466,11 @@
         location: '',
         plan: ''
       });
+
+      // 保存数据到本地存储
+      React.useEffect(() => {
+        localStorage.setItem('datings', JSON.stringify(datings));
+      }, [datings]);
 
       // 处理创建约会
       const handleCreateDating = () => {
@@ -570,66 +555,73 @@
 
           {/* 约会列表 */}
           <div className="space-y-4">
-            {datings.map((dating) => (
-              <div key={dating.id} className="bg-white rounded-2xl shadow-lg p-5">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center">
-                      <span className="text-2xl">{getDatingTypeIcon(dating.type)}</span>
+            {datings.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+                <p className="text-gray-500 mb-2">还没有约会计划</p>
+                <p className="text-sm text-gray-400">点击上方按钮发起新约会吧</p>
+              </div>
+            ) : (
+              datings.map((dating) => (
+                <div key={dating.id} className="bg-white rounded-2xl shadow-lg p-5">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center">
+                        <span className="text-2xl">{getDatingTypeIcon(dating.type)}</span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-700">{dating.title}</h3>
+                        <p className={`text-sm ${getStatusColor(dating.status)} font-medium`}>
+                          {getStatusText(dating.status)}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-700">{dating.title}</h3>
-                      <p className={`text-sm ${getStatusColor(dating.status)} font-medium`}>
-                        {getStatusText(dating.status)}
-                      </p>
+                    <div className="text-sm text-gray-500">
+                      {dating.time}
                     </div>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {dating.time}
-                  </div>
-                </div>
-                
-                <div className="mb-3">
-                  <p className="text-sm text-gray-600 flex items-center gap-2">
-                    <span>📍</span> {dating.location}
-                  </p>
-                </div>
-                
-                {dating.plan && (
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-600 flex items-start gap-2">
-                      <span>📝</span> <span>{dating.plan}</span>
+                  
+                  <div className="mb-3">
+                    <p className="text-sm text-gray-600 flex items-center gap-2">
+                      <span>📍</span> {dating.location}
                     </p>
                   </div>
-                )}
+                  
+                  {dating.plan && (
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-600 flex items-start gap-2">
+                        <span>📝</span> <span>{dating.plan}</span>
+                      </p>
+                    </div>
+                  )}
 
-                {/* 操作按钮 */}
-                {dating.status === 'pending' && dating.creator === 'partner' && (
-                  <div className="flex gap-3 mt-4">
-                    <button 
-                      onClick={() => handleUpdateStatus(dating.id, 'accepted')}
-                      className="flex-1 py-2 bg-green-100 text-green-700 rounded-full font-bold text-sm hover:bg-green-200 transition-colors"
-                    >
-                      接受
-                    </button>
-                    <button 
-                      onClick={() => handleUpdateStatus(dating.id, 'rejected')}
-                      className="flex-1 py-2 bg-red-100 text-red-700 rounded-full font-bold text-sm hover:bg-red-200 transition-colors"
-                    >
-                      拒绝
-                    </button>
-                  </div>
-                )}
+                  {/* 操作按钮 */}
+                  {dating.status === 'pending' && dating.creator === 'partner' && (
+                    <div className="flex gap-3 mt-4">
+                      <button 
+                        onClick={() => handleUpdateStatus(dating.id, 'accepted')}
+                        className="flex-1 py-2 bg-green-100 text-green-700 rounded-full font-bold text-sm hover:bg-green-200 transition-colors"
+                      >
+                        接受
+                      </button>
+                      <button 
+                        onClick={() => handleUpdateStatus(dating.id, 'rejected')}
+                        className="flex-1 py-2 bg-red-100 text-red-700 rounded-full font-bold text-sm hover:bg-red-200 transition-colors"
+                      >
+                        拒绝
+                      </button>
+                    </div>
+                  )}
 
-                {/* 完成状态显示 */}
-                {dating.status === 'completed' && (
-                  <div className="mt-4 p-3 bg-green-50 rounded-xl text-center">
-                    <p className="text-green-600 font-bold">约会已完成！</p>
-                    <p className="text-sm text-green-500">期待下一次的见面 ❤️</p>
-                  </div>
-                )}
-              </div>
-            ))}
+                  {/* 完成状态显示 */}
+                  {dating.status === 'completed' && (
+                    <div className="mt-4 p-3 bg-green-50 rounded-xl text-center">
+                      <p className="text-green-600 font-bold">约会已完成！</p>
+                      <p className="text-sm text-green-500">期待下一次的见面 ❤️</p>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
 
           {/* 创建约会模态框 */}
@@ -730,7 +722,11 @@
 
     // 任务页面组件
     function TaskPage() {
-      const [tasks, setTasks] = React.useState(initialTasks);
+      // 从本地存储加载数据，初始值为空数组
+      const [tasks, setTasks] = React.useState(() => {
+        const savedTasks = localStorage.getItem('tasks');
+        return savedTasks ? JSON.parse(savedTasks) : [];
+      });
       const [showCreateModal, setShowCreateModal] = React.useState(false);
       const [newTask, setNewTask] = React.useState({
         title: '',
@@ -740,6 +736,11 @@
         deadline: '',
         category: 'daily'
       });
+
+      // 保存数据到本地存储
+      React.useEffect(() => {
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+      }, [tasks]);
 
       // 处理创建任务
       const handleCreateTask = () => {
@@ -841,71 +842,78 @@
 
           {/* 任务列表 */}
           <div className="space-y-4">
-            {tasks.map((task) => (
-              <div key={task.id} className="bg-white rounded-2xl shadow-lg p-5">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center">
-                      <span className="text-2xl">{getTaskCategoryIcon(task.category)}</span>
+            {tasks.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+                <p className="text-gray-500 mb-2">还没有任务</p>
+                <p className="text-sm text-gray-400">点击上方按钮发布新任务吧</p>
+              </div>
+            ) : (
+              tasks.map((task) => (
+                <div key={task.id} className="bg-white rounded-2xl shadow-lg p-5">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center">
+                        <span className="text-2xl">{getTaskCategoryIcon(task.category)}</span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-700">{task.title}</h3>
+                        <p className={`text-sm ${getTaskStatusColor(task.status)} font-medium`}>
+                          {getTaskStatusText(task.status)}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-700">{task.title}</h3>
-                      <p className={`text-sm ${getTaskStatusColor(task.status)} font-medium`}>
-                        {getTaskStatusText(task.status)}
+                    <div className="text-sm text-gray-500">
+                      {task.deadline}
+                    </div>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <p className="text-sm text-gray-600">{task.description}</p>
+                  </div>
+                  
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center gap-4">
+                      <p className="text-sm text-gray-600 flex items-center gap-1">
+                        <span>⏱️</span> {task.duration}分钟
+                      </p>
+                      <p className="text-sm text-pink-600 font-bold flex items-center gap-1">
+                        <span>💕</span> +{task.intimacyReward}亲密度
+                      </p>
+                      <p className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                        {getTaskCategoryName(task.category)}
                       </p>
                     </div>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {task.deadline}
-                  </div>
-                </div>
-                
-                <div className="mb-3">
-                  <p className="text-sm text-gray-600">{task.description}</p>
-                </div>
-                
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-4">
-                    <p className="text-sm text-gray-600 flex items-center gap-1">
-                      <span>⏱️</span> {task.duration}分钟
-                    </p>
-                    <p className="text-sm text-pink-600 font-bold flex items-center gap-1">
-                      <span>💕</span> +{task.intimacyReward}亲密度
-                    </p>
-                    <p className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                      {getTaskCategoryName(task.category)}
-                    </p>
-                  </div>
-                </div>
 
-                {/* 操作按钮 */}
-                {task.status === 'pending' && task.creator === 'partner' && (
-                  <button 
-                    onClick={() => handleClaimTask(task.id)}
-                    className="w-full py-3 bg-gradient-to-r from-blue-200 to-purple-200 text-gray-700 rounded-full font-bold text-sm hover:opacity-90 transition-opacity"
-                  >
-                    认领任务
-                  </button>
-                )}
+                  {/* 操作按钮 */}
+                  {task.status === 'pending' && task.creator === 'partner' && (
+                    <button 
+                      onClick={() => handleClaimTask(task.id)}
+                      className="w-full py-3 bg-gradient-to-r from-blue-200 to-purple-200 text-gray-700 rounded-full font-bold text-sm hover:opacity-90 transition-opacity"
+                    >
+                      认领任务
+                    </button>
+                  )}
 
-                {task.status === 'claimed' && task.claimer === 'partner' && (
-                  <button 
-                    onClick={() => handleCompleteTask(task.id)}
-                    className="w-full py-3 bg-gradient-to-r from-green-200 to-teal-200 text-gray-700 rounded-full font-bold text-sm hover:opacity-90 transition-opacity"
-                  >
-                    完成任务
-                  </button>
-                )}
+                  {task.status === 'claimed' && task.claimer === 'partner' && (
+                    <button 
+                      onClick={() => handleCompleteTask(task.id)}
+                      className="w-full py-3 bg-gradient-to-r from-green-200 to-teal-200 text-gray-700 rounded-full font-bold text-sm hover:opacity-90 transition-opacity"
+                    >
+                      完成任务
+                    </button>
+                  )}
 
-                {/* 完成状态显示 */}
-                {task.status === 'completed' && (
-                  <div className="mt-4 p-3 bg-green-50 rounded-xl text-center">
-                    <p className="text-green-600 font-bold">任务已完成！</p>
-                    <p className="text-sm text-green-500">获得 +{task.intimacyReward} 亲密度</p>
-                  </div>
-                )}
-              </div>
-            ))}
+                  {/* 完成状态显示 */}
+                  {task.status === 'completed' && (
+                    <div className="mt-4 p-3 bg-green-50 rounded-xl text-center">
+                      <p className="text-green-600 font-bold">任务已完成！</p>
+                      <p className="text-sm text-green-500">获得 +{task.intimacyReward} 亲密度</p>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
 
           {/* 创建任务模态框 */}
@@ -1016,10 +1024,19 @@
 
     // 纪念册页面组件
     function MemoryPage() {
-      const [memories, setMemories] = React.useState(initialMemories);
+      // 从本地存储加载数据，初始值为空数组
+      const [memories, setMemories] = React.useState(() => {
+        const savedMemories = localStorage.getItem('memories');
+        return savedMemories ? JSON.parse(savedMemories) : [];
+      });
       const [filterType, setFilterType] = React.useState('all');
       const [showReportModal, setShowReportModal] = React.useState(false);
       const [reportType, setReportType] = React.useState('week');
+
+      // 保存数据到本地存储
+      React.useEffect(() => {
+        localStorage.setItem('memories', JSON.stringify(memories));
+      }, [memories]);
 
       // 过滤记忆条目
       const filteredMemories = filterType === 'all' 
@@ -1049,12 +1066,12 @@
       // 生成报告数据
       const generateReport = () => {
         return {
-          totalCheckIns: 5,
-          totalDatings: 3,
-          totalTasks: 4,
-          totalIntimacy: 120,
-          streakDays: 7,
-          bestMoment: '一起看电影的夜晚'
+          totalCheckIns: memories.filter(item => item.type === 'checkIn').length,
+          totalDatings: memories.filter(item => item.type === 'dating').length,
+          totalTasks: memories.filter(item => item.type === 'task').length,
+          totalIntimacy: memories.reduce((sum, item) => sum + item.intimacy, 0),
+          streakDays: 0,
+          bestMoment: memories.length > 0 ? memories[0].title : '暂无'
         };
       };
 
@@ -1106,36 +1123,43 @@
 
           {/* 记忆列表 */}
           <div className="space-y-4">
-            {filteredMemories.map((memory) => (
-              <div key={memory.id} className="bg-white rounded-2xl shadow-lg p-5">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center">
-                      <span className="text-xl">{getTypeIcon(memory.type)}</span>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-700">{memory.title}</h3>
-                      <p className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full inline-block">
-                        {getTypeName(memory.type)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {memory.date}
-                  </div>
-                </div>
-                
-                <div className="mb-3">
-                  <p className="text-sm text-gray-600">{memory.content}</p>
-                </div>
-                
-                <div className="flex justify-end">
-                  <p className="text-sm text-pink-600 font-bold flex items-center gap-1">
-                    <span>💕</span> +{memory.intimacy}亲密度
-                  </p>
-                </div>
+            {filteredMemories.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+                <p className="text-gray-500 mb-2">还没有记录</p>
+                <p className="text-sm text-gray-400">开始使用APP，记录你们的美好时光吧</p>
               </div>
-            ))}
+            ) : (
+              filteredMemories.map((memory) => (
+                <div key={memory.id} className="bg-white rounded-2xl shadow-lg p-5">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center">
+                        <span className="text-xl">{getTypeIcon(memory.type)}</span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-700">{memory.title}</h3>
+                        <p className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full inline-block">
+                          {getTypeName(memory.type)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {memory.date}
+                    </div>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <p className="text-sm text-gray-600">{memory.content}</p>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <p className="text-sm text-pink-600 font-bold flex items-center gap-1">
+                      <span>💕</span> +{memory.intimacy}亲密度
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           {/* 报告模态框 */}
@@ -1217,7 +1241,15 @@
 
     // 主应用组件
     function App() {
-      const [currentPage, setCurrentPage] = React.useState('home');
+      // 从本地存储加载页面状态，初始值为'home'
+      const [currentPage, setCurrentPage] = React.useState(() => {
+        return localStorage.getItem('currentPage') || 'home';
+      });
+
+      // 保存页面状态到本地存储
+      React.useEffect(() => {
+        localStorage.setItem('currentPage', currentPage);
+      }, [currentPage]);
 
       return (
         <div className="min-h-screen bg-background">
@@ -1298,5 +1330,4 @@
   <!-- 引入Babel以便在浏览器中编译JSX -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </body>
-
 </html>
